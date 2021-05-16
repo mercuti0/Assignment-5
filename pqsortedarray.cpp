@@ -30,31 +30,45 @@ PQSortedArray::~PQSortedArray() {
 }
 
 /*
- * TODO: Replace this comment with a descriptive function
- * comment about your implementation of the function.
+ * If _numFilled is one less than _numAllocated, then we double the size of the array as this one extra space is going
+ * to be needed to shift the array and insert the elem where it should be. We double the array to not have to increase
+ * the array a small amount each time. Then we find at which index elem will need to be inserted, so when the priority of
+ * elem is greater than or equal to the index next to it. Lastly, we shift the entire array over to make space at and
+ * for elem, copy over the rest of the array, and insert elem in its spot.
  */
 void PQSortedArray::enqueue(DataPoint elem) {
-    if (_numFilled == _numAllocated) {
+    if (_numFilled == _numAllocated - 1) {
+        // Create array of double the size of _elements
         DataPoint* newElements = new DataPoint[_numAllocated * 2];
         for (int i = 0; i < _numFilled; i++) {
+            // Copy _elements into newElements
             newElements[i] = _elements[i];
         }
         delete [] _elements;
         _elements = newElements;
         _numAllocated *= 2;
     }
-    if (_numFilled == 0)
-        _elements[0] = elem;
-
-    for (int i = _numFilled - 1; i >= 0; i++) {
-        if (elem.priority > _elements[i].priority) {
-            _elements[i + 1] = _elements[i];
-            _elements[i] = elem;
-        } else {
-            _elements[i + 1] = elem;
+    int insertPos = 0;
+    // Find index at which elem goes
+    for (int i = 0; i < _numFilled; i++) {
+        if (elem.priority >= _elements[i].priority) {
+            insertPos = i;
+            break;
         }
     }
     _numFilled ++;
+    // Shift over the array one spot after insertPos to make space for elem.
+    DataPoint* newElements = new DataPoint[_numAllocated];
+    for (int i = _numFilled; i > insertPos; i--) {
+        newElements[i] = _elements[i - 1];
+    }
+    // Insert the elements before insertPos that do not need to be shifted
+    for (int i = 0; i < insertPos; i++) {
+        newElements[i] = _elements[i];
+    }
+    delete [] _elements;
+    _elements = newElements;
+    _elements[insertPos] = elem;
 }
 
 /*
@@ -144,9 +158,25 @@ void PQSortedArray::validateInternalState() {
 
 /* * * * * * Test Cases Below This Point * * * * * */
 
-/* TODO: Add your own custom tests here! */
+STUDENT_TEST("Enqueue in between") {
+    PQSortedArray pq;
+    for (int i = 0; i < 20; i++) {
+        pq.enqueue({ "a" + integerToString(i), i });
+    }
+    for (int i = 20; i < 30; i++) {
+        pq.enqueue({ "c" + integerToString(i), i });
+    }
+    for (int i = 30; i <= 49; i++) {
+       pq.enqueue({ "b" + integerToString(i), i });
+    }
+    EXPECT_EQUAL(pq.size(), 50);
+    for (int i = 0; i < 50 ; i++) {
+        DataPoint one = pq.dequeue();
 
-
+        EXPECT_EQUAL(one.priority, i);
+    }
+    pq.clear();
+}
 
 
 /* * * * * Provided Tests Below This Point * * * * */
@@ -333,4 +363,10 @@ PROVIDED_TEST("PQSortedArray timing test, fillQueue and emptyQueue") {
 
     TIME_OPERATION(10000, fillQueue(pq, 10000));
     TIME_OPERATION(10000, emptyQueue(pq, 10000));
+    TIME_OPERATION(20000, fillQueue(pq, 20000));
+    TIME_OPERATION(20000, emptyQueue(pq, 20000));
+    TIME_OPERATION(30000, fillQueue(pq, 30000));
+    TIME_OPERATION(30000, emptyQueue(pq, 30000));
+    TIME_OPERATION(40000, fillQueue(pq, 40000));
+    TIME_OPERATION(40000, emptyQueue(pq, 40000));
 }
