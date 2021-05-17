@@ -1,3 +1,6 @@
+/* This class sorts an array in decreasing sorted order of priority value. All functions work just
+ * like an array would with: peek, enqueue, dequeue, clear, Empty, and size.
+ */
 #include "pqsortedarray.h"
 #include "error.h"
 #include "random.h"
@@ -48,7 +51,7 @@ void PQSortedArray::enqueue(DataPoint elem) {
         _elements = newElements;
         _numAllocated *= 2;
     }
-    int insertPos = 0;
+    int insertPos = _numFilled;
     // Find index at which elem goes
     for (int i = 0; i < _numFilled; i++) {
         if (elem.priority >= _elements[i].priority) {

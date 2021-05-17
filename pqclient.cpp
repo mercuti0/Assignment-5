@@ -1,3 +1,6 @@
+/* This function runs finds the top k values in the stream, in descending order by priority value and
+ * returns this vector of respective DataPoints.
+ */
 #include "pqclient.h"
 #include "pqsortedarray.h"
 #include "pqheap.h"
@@ -26,14 +29,36 @@ void pqSort(Vector<DataPoint>& v) {
     }
 }
 
-/* TODO: Refer to pqclient.h for more information about what this function does, then
- * delete this comment.
+/* This function constructs a vector with a fixed size of k, and enqueues these same datapoints. Then,
+ * as we are going through the rest of the stream, we are constantly replacing the lowest values with the
+ * higher cur's. In the end, we end up with the top k values in the correct sorted order.
  */
 Vector<DataPoint> topK(istream& stream, int k) {
-    /* TODO: Implement this function. */
-    return {};
+    DataPoint cur;
+    PQSortedArray data;
+    Vector<DataPoint> trueData;
+    while (stream >> cur) {
+        if (data.size() < k) {
+            // Enqueue sorts the array in the correct order.
+            data.enqueue(cur);
+            trueData.add(cur);
+        }
+        else {
+            // The higher priority values replace the lowest priority values, still in the correct sorted order.
+            if (cur.priority > data.peek().priority) {
+                data.dequeue();
+                data.enqueue(cur);
+            }
+        }
+    }
+    // Since it's easier to remove from the back of an array, we add to the final vector this way for simplicity.
+    if (trueData.size() > 0) {
+        for (int i = k - 1; i >= 0; i--) {
+            trueData[i] = data.dequeue();
+        }
+    }
+    return trueData;
 }
-
 
 
 /* * * * * * Test Cases Below This Point * * * * * */
